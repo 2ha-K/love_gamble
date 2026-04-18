@@ -3,11 +3,11 @@ import { Hand, Sparkles } from "lucide-react";
 import { APP_STATES } from "../../utils/animation";
 
 const labels = {
-  [APP_STATES.IDLE]: "點擊金印，喚醒籤筒",
-  [APP_STATES.DRAWING]: "籤卡正在離筒",
-  [APP_STATES.REVEALED]: "輕拖觀賞，長按進入刮除",
-  [APP_STATES.SCRATCH_MODE]: "刮除模式已鎖定",
-  [APP_STATES.DISINTEGRATING]: "灰燼回風",
+  [APP_STATES.IDLE]: "點擊籤筒，抽出刮刮卡",
+  [APP_STATES.DRAWING]: "卡片正在離筒",
+  [APP_STATES.REVEALED]: "按住外圍可翻看，金色覆蓋處可刮",
+  [APP_STATES.SCRATCH_MODE]: "正在刮除金色覆層",
+  [APP_STATES.DISINTEGRATING]: "卡片滑離，籤筒待命",
   [APP_STATES.RESETTING]: "重新歸位",
 };
 

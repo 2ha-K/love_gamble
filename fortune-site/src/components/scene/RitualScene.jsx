@@ -1,7 +1,6 @@
 import { Suspense, useMemo } from "react";
 import { Canvas } from "@react-three/fiber";
 import { APP_STATES } from "../../utils/animation";
-import { DrawButton } from "./DrawButton";
 import { FortuneTube } from "./FortuneTube";
 import { ScratchCard3D } from "./ScratchCard3D";
 import { ShrineBackground } from "./ShrineBackground";
@@ -14,6 +13,7 @@ export function RitualScene({
   onDraw,
   onDrawComplete,
   onScratchMode,
+  onScratchEnd,
   onScratchProgress,
   onScratchActivity,
   audio,
@@ -22,7 +22,11 @@ export function RitualScene({
     const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     return mobile ? [1, 1.5] : [1, 2];
   }, []);
-  const showTube = state === APP_STATES.IDLE || state === APP_STATES.DRAWING || state === APP_STATES.RESETTING;
+  const showTube =
+    state === APP_STATES.IDLE ||
+    state === APP_STATES.DRAWING ||
+    state === APP_STATES.DISINTEGRATING ||
+    state === APP_STATES.RESETTING;
   const showCard = activeCard && state !== APP_STATES.IDLE && state !== APP_STATES.RESETTING;
 
   return (
@@ -43,8 +47,13 @@ export function RitualScene({
 
       <Suspense fallback={<LoadingOverlay />}>
         <ShrineBackground />
-        {showTube && <FortuneTube drawing={state === APP_STATES.DRAWING} />}
-        {state === APP_STATES.IDLE && <DrawButton onDraw={onDraw} />}
+        {showTube && (
+          <FortuneTube
+            drawing={state === APP_STATES.DRAWING}
+            disabled={state !== APP_STATES.IDLE}
+            onDraw={onDraw}
+          />
+        )}
         {showCard && (
           <ScratchCard3D
             key={`${activeCard.id}-${resetKey}`}
@@ -52,6 +61,7 @@ export function RitualScene({
             state={state}
             onDrawComplete={onDrawComplete}
             onScratchMode={onScratchMode}
+            onScratchEnd={onScratchEnd}
             onScratchProgress={onScratchProgress}
             onScratchActivity={onScratchActivity}
             audio={audio}

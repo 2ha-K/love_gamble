@@ -12,43 +12,45 @@ export function createGoldCoatingCanvas() {
   const height = canvas.height;
 
   const base = ctx.createLinearGradient(0, 0, width, height);
-  base.addColorStop(0, "#4b2607");
-  base.addColorStop(0.18, "#d49b28");
-  base.addColorStop(0.42, "#fff2aa");
-  base.addColorStop(0.68, "#a26010");
-  base.addColorStop(1, "#2b1304");
+  base.addColorStop(0, "#6b3b08");
+  base.addColorStop(0.16, "#f1bd45");
+  base.addColorStop(0.38, "#fff0a4");
+  base.addColorStop(0.58, "#c7831c");
+  base.addColorStop(0.78, "#ffe29a");
+  base.addColorStop(1, "#4a2304");
   ctx.fillStyle = base;
   ctx.fillRect(0, 0, width, height);
 
-  for (let i = 0; i < 900; i += 1) {
+  for (let i = 0; i < 1200; i += 1) {
     const y = Math.random() * height;
-    const alpha = 0.025 + Math.random() * 0.055;
-    ctx.strokeStyle = Math.random() > 0.46 ? `rgba(255,246,190,${alpha})` : `rgba(65,31,5,${alpha})`;
-    ctx.lineWidth = Math.random() * 1.6 + 0.3;
+    const alpha = 0.035 + Math.random() * 0.08;
+    ctx.strokeStyle = Math.random() > 0.42 ? `rgba(255,246,190,${alpha})` : `rgba(54,22,4,${alpha})`;
+    ctx.lineWidth = Math.random() * 1.2 + 0.22;
     ctx.beginPath();
     ctx.moveTo(-80, y);
-    ctx.lineTo(width + 80, y + (Math.random() - 0.5) * 32);
+    ctx.lineTo(width + 80, y + (Math.random() - 0.5) * 22);
     ctx.stroke();
   }
 
-  const glow = ctx.createRadialGradient(width * 0.24, height * 0.18, 0, width * 0.24, height * 0.18, width * 0.58);
-  glow.addColorStop(0, "rgba(255,255,216,0.5)");
-  glow.addColorStop(0.28, "rgba(255,213,105,0.12)");
+  const glow = ctx.createRadialGradient(width * 0.32, height * 0.18, 0, width * 0.32, height * 0.18, width * 0.58);
+  glow.addColorStop(0, "rgba(255,255,216,0.72)");
+  glow.addColorStop(0.28, "rgba(255,213,105,0.2)");
   glow.addColorStop(1, "rgba(255,213,105,0)");
   ctx.fillStyle = glow;
   ctx.fillRect(0, 0, width, height);
 
-  ctx.fillStyle = "rgba(255,246,196,0.72)";
+  ctx.fillStyle = "rgba(255,246,196,0.84)";
   ctx.font = "700 62px serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.fillText("命", width * 0.5, height * 0.46);
 
-  ctx.strokeStyle = "rgba(255,244,190,0.45)";
-  ctx.lineWidth = 5;
-  ctx.strokeRect(width * 0.09, height * 0.08, width * 0.82, height * 0.84);
-  ctx.lineWidth = 1.5;
-  ctx.strokeRect(width * 0.13, height * 0.12, width * 0.74, height * 0.76);
+  ctx.strokeStyle = "rgba(255,244,190,0.58)";
+  ctx.lineWidth = 7;
+  ctx.strokeRect(width * 0.045, height * 0.045, width * 0.91, height * 0.91);
+  ctx.strokeStyle = "rgba(65,28,4,0.22)";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(width * 0.08, height * 0.08, width * 0.84, height * 0.84);
 
   return canvas;
 }
@@ -120,4 +122,3 @@ export function calculateScratchPercent(canvas) {
 
   return Math.round((removed / total) * 100);
 }
-

@@ -11,6 +11,11 @@ export function useCardTilt() {
     targetRef.current.x = clamp(-(uv.y - 0.5) * 0.32, -0.14, 0.14);
   }, []);
 
+  const updateFromDrag = useCallback((deltaX, deltaY) => {
+    targetRef.current.y = clamp(deltaX * 0.004, -0.26, 0.26);
+    targetRef.current.x = clamp(-deltaY * 0.003, -0.18, 0.18);
+  }, []);
+
   const reset = useCallback(() => {
     targetRef.current.x = 0;
     targetRef.current.y = 0;
@@ -22,6 +27,5 @@ export function useCardTilt() {
     return currentRef.current;
   }, []);
 
-  return { updateFromUv, reset, step };
+  return { updateFromUv, updateFromDrag, reset, step };
 }
-

@@ -14,7 +14,6 @@ export default function App() {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [scratchPercent, setScratchPercent] = useState(0);
   const [resetKey, setResetKey] = useState(0);
-  const inactivityTimerRef = useRef(null);
   const resetTimerRef = useRef(null);
   const audio = useRitualAudio();
 
@@ -22,17 +21,6 @@ export default function App() {
     if (activeIndex < 0) return null;
     return scratchCards[activeIndex % scratchCards.length];
   }, [activeIndex]);
-
-  const clearInactivityTimer = useCallback(() => {
-    window.clearTimeout(inactivityTimerRef.current);
-  }, []);
-
-  const scheduleScratchExit = useCallback(() => {
-    clearInactivityTimer();
-    inactivityTimerRef.current = window.setTimeout(() => {
-      setState((current) => (current === APP_STATES.SCRATCH_MODE ? APP_STATES.REVEALED : current));
-    }, 2600);
-  }, [clearInactivityTimer]);
 
   const startDraw = useCallback(() => {
     if (state !== APP_STATES.IDLE) return;
@@ -50,14 +38,13 @@ export default function App() {
     setState((current) => {
       if (current !== APP_STATES.REVEALED) return current;
       audio.scratchReady();
-      scheduleScratchExit();
       return APP_STATES.SCRATCH_MODE;
     });
-  }, [audio, scheduleScratchExit]);
+  }, [audio]);
 
-  const handleScratchActivity = useCallback(() => {
-    scheduleScratchExit();
-  }, [scheduleScratchExit]);
+  const leaveScratchMode = useCallback(() => {
+    setState((current) => (current === APP_STATES.SCRATCH_MODE ? APP_STATES.REVEALED : current));
+  }, []);
 
   const handleScratchProgress = useCallback((percent) => {
     setScratchPercent(percent);
@@ -65,7 +52,6 @@ export default function App() {
 
   const reset = useCallback(() => {
     if (state === APP_STATES.IDLE || state === APP_STATES.RESETTING || state === APP_STATES.DISINTEGRATING) return;
-    clearInactivityTimer();
     audio.ash();
     setState(APP_STATES.DISINTEGRATING);
     window.clearTimeout(resetTimerRef.current);
@@ -75,9 +61,9 @@ export default function App() {
         setResetKey((key) => key + 1);
         setScratchPercent(0);
         setState(APP_STATES.IDLE);
-      }, 420);
-    }, 2250);
-  }, [audio, clearInactivityTimer, state]);
+      }, 460);
+    }, 2550);
+  }, [audio, state]);
 
   const resetVisible = state !== APP_STATES.IDLE && state !== APP_STATES.RESETTING;
 
@@ -91,8 +77,8 @@ export default function App() {
         onDraw={startDraw}
         onDrawComplete={completeDraw}
         onScratchMode={enterScratchMode}
+        onScratchEnd={leaveScratchMode}
         onScratchProgress={handleScratchProgress}
-        onScratchActivity={handleScratchActivity}
         audio={audio}
       />
 
@@ -116,7 +102,7 @@ export default function App() {
             exit={{ opacity: 0, y: -8, filter: "blur(8px)" }}
             transition={{ duration: 0.45 }}
           >
-            <span>{activeCard ? activeCard.subtitle : "全黑空間中的一支籤筒"}</span>
+            <span>{activeCard ? activeCard.subtitle : "全黑空間中的一只籤筒"}</span>
             <h1>{activeCard ? activeCard.title : "玄夜抽籤"}</h1>
           </Motion.div>
         </AnimatePresence>
