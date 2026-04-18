@@ -65,7 +65,17 @@ export function createMaskCanvas() {
   return canvas;
 }
 
-function scratchLine(ctx, from, to, width, alpha, jitter, slices) {
+export function createRevealCanvas() {
+  const canvas = document.createElement("canvas");
+  canvas.width = SCRATCH_TEXTURE_SIZE.width;
+  canvas.height = SCRATCH_TEXTURE_SIZE.height;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#000000";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
+function scratchLine(ctx, from, to, width, alpha, jitter, slices, color) {
   const dx = to.x - from.x;
   const dy = to.y - from.y;
   const length = Math.max(1, Math.hypot(dx, dy));
@@ -78,7 +88,7 @@ function scratchLine(ctx, from, to, width, alpha, jitter, slices) {
     const start = gap;
     const end = 1 - Math.random() * 0.1;
 
-    ctx.strokeStyle = `rgba(0,0,0,${alpha * (0.42 + Math.random() * 0.58)})`;
+    ctx.strokeStyle = `rgba(${color},${alpha * (0.42 + Math.random() * 0.58)})`;
     ctx.lineWidth = width * (0.3 + Math.random() * 0.72);
     ctx.lineCap = Math.random() > 0.55 ? "round" : "butt";
     ctx.beginPath();
@@ -88,20 +98,20 @@ function scratchLine(ctx, from, to, width, alpha, jitter, slices) {
   }
 }
 
-export function applyDirectionalScratch(ctx, from, to, velocity = 1) {
+export function applyDirectionalScratch(ctx, from, to, velocity = 1, color = "0,0,0") {
   const speed = Math.max(0.7, Math.min(2.6, velocity));
   const radius = 30 + speed * 10;
 
   ctx.save();
   ctx.globalCompositeOperation = "source-over";
-  scratchLine(ctx, from, to, radius, 0.68, radius * 1.25, 7);
-  scratchLine(ctx, from, to, radius * 0.42, 0.88, radius * 0.58, 8);
+  scratchLine(ctx, from, to, radius, 0.68, radius * 1.25, 7, color);
+  scratchLine(ctx, from, to, radius * 0.42, 0.88, radius * 0.58, 8, color);
 
   for (let i = 0; i < 18; i += 1) {
     const t = Math.random();
     const x = from.x + (to.x - from.x) * t + (Math.random() - 0.5) * radius * 1.2;
     const y = from.y + (to.y - from.y) * t + (Math.random() - 0.5) * radius * 1.2;
-    ctx.fillStyle = `rgba(0,0,0,${0.18 + Math.random() * 0.28})`;
+    ctx.fillStyle = `rgba(${color},${0.18 + Math.random() * 0.28})`;
     ctx.beginPath();
     ctx.ellipse(x, y, Math.random() * 5 + 2, Math.random() * 1.8 + 0.8, Math.random() * Math.PI, 0, Math.PI * 2);
     ctx.fill();

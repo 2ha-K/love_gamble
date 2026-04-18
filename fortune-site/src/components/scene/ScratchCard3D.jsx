@@ -3,13 +3,32 @@ import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import { useCardTilt } from "../../hooks/useCardTilt";
 import { useScratchCard } from "../../hooks/useScratchCard";
-import { APP_STATES, easeInOutCubic, stagedDrawPath } from "../../utils/animation";
+import { APP_STATES, stagedDrawPath, stagedResetPath } from "../../utils/animation";
 import { ScratchParticles } from "../scratch/ScratchParticles";
 
 const CARD_WIDTH = 2.82;
 const CARD_HEIGHT = 4.02;
 const COATING_WIDTH = CARD_WIDTH * 0.9;
 const COATING_HEIGHT = CARD_HEIGHT * 0.78;
+
+function CardBase() {
+  return (
+    <group>
+      <mesh position={[0, 0, 0.014]}>
+        <planeGeometry args={[CARD_WIDTH, CARD_HEIGHT]} />
+        <meshStandardMaterial color="#e6d19a" roughness={0.62} metalness={0.02} />
+      </mesh>
+      <mesh position={[0, 0, 0.02]}>
+        <planeGeometry args={[CARD_WIDTH * 0.86, CARD_HEIGHT * 0.84]} />
+        <meshBasicMaterial color="#fff0bf" transparent opacity={0.28} depthWrite={false} />
+      </mesh>
+      <mesh position={[0, 0, 0.021]}>
+        <planeGeometry args={[CARD_WIDTH * 0.74, CARD_HEIGHT * 0.7]} />
+        <meshBasicMaterial color="#8b2b1f" transparent opacity={0.08} depthWrite={false} />
+      </mesh>
+    </group>
+  );
+}
 
 function FrameLines() {
   const material = useMemo(() => new THREE.MeshStandardMaterial({
@@ -42,19 +61,44 @@ function FrameLines() {
   );
 }
 
-function TiltHitZone({ position, args, handlers }) {
+function SpaceTiltPlane({ handlers }) {
   return (
     <mesh
-      position={position}
+      position={[0, 0, -0.18]}
       onPointerDown={handlers.onPointerDown}
       onPointerMove={handlers.onPointerMove}
       onPointerUp={handlers.onPointerUp}
       onPointerLeave={handlers.onPointerLeave}
     >
-      <planeGeometry args={args} />
+      <planeGeometry args={[9, 7]} />
       <meshBasicMaterial transparent opacity={0} depthWrite={false} />
     </mesh>
   );
+}
+
+function mapCardUvToCoatingUv(uv) {
+  const x = (uv.x - (1 - COATING_WIDTH / CARD_WIDTH) / 2) / (COATING_WIDTH / CARD_WIDTH);
+  const y = (uv.y - (1 - COATING_HEIGHT / CARD_HEIGHT) / 2) / (COATING_HEIGHT / CARD_HEIGHT);
+
+  return {
+    x: Math.max(0, Math.min(1, x)),
+    y: Math.max(0, Math.min(1, y)),
+  };
+}
+
+function fadeMaterial(material, opacity) {
+  if (material.userData.ritualBaseOpacity === undefined) {
+    material.userData.ritualBaseOpacity = material.opacity ?? 1;
+    material.userData.ritualBaseTransparent = material.transparent;
+  }
+
+  const effectiveOpacity = material.userData.ritualBaseOpacity * opacity;
+  material.transparent = material.userData.ritualBaseTransparent || effectiveOpacity < 0.995;
+  material.opacity = effectiveOpacity;
+
+  if ("emissiveIntensity" in material) {
+    material.emissiveIntensity = 0;
+  }
 }
 
 export function ScratchCard3D({
@@ -92,7 +136,7 @@ export function ScratchCard3D({
     }
   }, [state]);
 
-  useFrame((renderState) => {
+  useFrame((renderState, delta) => {
     if (!groupRef.current) return;
     const elapsed = renderState.clock.elapsedTime;
 
@@ -118,7 +162,7 @@ export function ScratchCard3D({
       return;
     }
 
-    const rotation = tilt.step(holdingTiltRef.current ? 0.08 : 0.045);
+    const rotation = tilt.step(delta, holdingTiltRef.current ? 72 : 48, 12);
     groupRef.current.position.set(0, 0.02 + Math.sin(elapsed * 0.75) * 0.025, 1.38);
     groupRef.current.scale.setScalar(1);
     groupRef.current.rotation.x = rotation.x;
@@ -137,19 +181,18 @@ export function ScratchCard3D({
 
     if (state === APP_STATES.DISINTEGRATING) {
       if (disintegrateStartRef.current === null) disintegrateStartRef.current = elapsed;
-      const p = Math.min(1, (elapsed - disintegrateStartRef.current) / 1.45);
-      const eased = easeInOutCubic(p);
-      groupRef.current.position.x = eased * 4.8;
-      groupRef.current.position.y = 0.02 + Math.sin(eased * Math.PI) * 0.28;
-      groupRef.current.position.z = 1.48 - eased * 0.16;
-      groupRef.current.rotation.x = rotation.x * (1 - eased * 0.4);
-      groupRef.current.rotation.y = rotation.y + eased * 0.44;
-      groupRef.current.rotation.z = -eased * 0.26;
-      groupRef.current.scale.setScalar(1 - eased * 0.08);
+      const p = Math.min(1, (elapsed - disintegrateStartRef.current) / 1.8);
+      const path = stagedResetPath(p);
+      groupRef.current.position.set(...path.position);
+      groupRef.current.rotation.set(
+        rotation.x + path.rotation[0],
+        rotation.y + path.rotation[1],
+        path.rotation[2],
+      );
+      groupRef.current.scale.setScalar(path.scale);
       groupRef.current.traverse((object) => {
         if (object.material) {
-          object.material.transparent = true;
-          object.material.opacity = Math.max(0, 1 - eased * 0.92);
+          fadeMaterial(object.material, path.opacity);
         }
       });
     }
@@ -157,19 +200,21 @@ export function ScratchCard3D({
 
   const handleTiltDown = (event) => {
     event.stopPropagation();
-    if (state !== APP_STATES.REVEALED) return;
+    if (state !== APP_STATES.REVEALED && state !== APP_STATES.SCRATCH_MODE) return;
+    event.target.setPointerCapture?.(event.pointerId);
     holdingTiltRef.current = true;
     dragStartRef.current = { x: event.clientX, y: event.clientY };
   };
 
   const handleTiltMove = (event) => {
     event.stopPropagation();
-    if (!holdingTiltRef.current || state !== APP_STATES.REVEALED) return;
+    if (!holdingTiltRef.current || (state !== APP_STATES.REVEALED && state !== APP_STATES.SCRATCH_MODE)) return;
     tilt.updateFromDrag(event.clientX - dragStartRef.current.x, event.clientY - dragStartRef.current.y);
   };
 
   const handleTiltUp = (event) => {
     event.stopPropagation();
+    event.target.releasePointerCapture?.(event.pointerId);
     holdingTiltRef.current = false;
     tilt.reset();
   };
@@ -177,11 +222,12 @@ export function ScratchCard3D({
   const handleScratchDown = (event) => {
     event.stopPropagation();
     if (state !== APP_STATES.REVEALED && state !== APP_STATES.SCRATCH_MODE) return;
+    event.target.setPointerCapture?.(event.pointerId);
     scratchingRef.current = true;
     holdingTiltRef.current = false;
     onScratchMode?.();
     if (event.uv) {
-      scratchAt(event.uv);
+      scratchAt(mapCardUvToCoatingUv(event.uv));
       audio?.scratch();
     }
   };
@@ -190,13 +236,14 @@ export function ScratchCard3D({
     event.stopPropagation();
     if (!scratchingRef.current || (state !== APP_STATES.REVEALED && state !== APP_STATES.SCRATCH_MODE)) return;
     if (event.uv) {
-      scratchAt(event.uv);
+      scratchAt(mapCardUvToCoatingUv(event.uv));
       audio?.scratch();
     }
   };
 
   const handleScratchUp = (event) => {
     event.stopPropagation();
+    event.target.releasePointerCapture?.(event.pointerId);
     scratchingRef.current = false;
     endStroke();
     onScratchEnd?.();
@@ -208,8 +255,10 @@ export function ScratchCard3D({
     onPointerDown: handleTiltDown,
     onPointerMove: handleTiltMove,
     onPointerUp: handleTiltUp,
+    onPointerCancel: handleTiltUp,
     onPointerLeave: (event) => {
       event.stopPropagation();
+      if (holdingTiltRef.current) return;
       holdingTiltRef.current = false;
       tilt.reset();
       endStroke();
@@ -218,47 +267,41 @@ export function ScratchCard3D({
 
   return (
     <group ref={groupRef} position={[0, -0.38, -0.08]} scale={0.08}>
+      <SpaceTiltPlane handlers={tiltHandlers} />
+
       <mesh position={[0, 0, -0.04]}>
         <boxGeometry args={[CARD_WIDTH + 0.08, CARD_HEIGHT + 0.08, 0.08]} />
         <meshStandardMaterial color="#25110b" roughness={0.48} metalness={0.18} />
       </mesh>
 
-      <mesh
-        position={[0, 0, 0.016]}
-        {...tiltHandlers}
-      >
-        <planeGeometry args={[CARD_WIDTH, CARD_HEIGHT, 1, 1]} />
-        <meshBasicMaterial map={textures.contentTexture} toneMapped={false} />
+      <CardBase />
+
+      <mesh position={[0, 0, 0.026]}>
+        <planeGeometry args={[COATING_WIDTH, COATING_HEIGHT, 1, 1]} />
+        <meshBasicMaterial
+          map={textures.contentTexture}
+          alphaMap={textures.revealTexture}
+          transparent
+          alphaTest={0.04}
+          depthWrite={false}
+          toneMapped={false}
+        />
       </mesh>
 
-      <TiltHitZone
-        position={[-CARD_WIDTH * 0.47, 0, 0.095]}
-        args={[CARD_WIDTH * 0.1, CARD_HEIGHT * 0.9]}
-        handlers={tiltHandlers}
-      />
-      <TiltHitZone
-        position={[CARD_WIDTH * 0.47, 0, 0.095]}
-        args={[CARD_WIDTH * 0.1, CARD_HEIGHT * 0.9]}
-        handlers={tiltHandlers}
-      />
-      <TiltHitZone
-        position={[0, CARD_HEIGHT * 0.43, 0.095]}
-        args={[CARD_WIDTH * 0.9, CARD_HEIGHT * 0.12]}
-        handlers={tiltHandlers}
-      />
-      <TiltHitZone
-        position={[0, -CARD_HEIGHT * 0.43, 0.095]}
-        args={[CARD_WIDTH * 0.9, CARD_HEIGHT * 0.12]}
-        handlers={tiltHandlers}
-      />
-
       <mesh
-        ref={coatingRef}
-        position={[0, 0, 0.052]}
+        position={[0, 0, 0.12]}
         onPointerDown={handleScratchDown}
         onPointerMove={handleScratchMove}
         onPointerUp={handleScratchUp}
         onPointerLeave={handleScratchUp}
+      >
+        <planeGeometry args={[CARD_WIDTH, CARD_HEIGHT, 1, 1]} />
+        <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+      </mesh>
+
+      <mesh
+        ref={coatingRef}
+        position={[0, 0, 0.052]}
       >
         <planeGeometry args={[COATING_WIDTH, COATING_HEIGHT, 1, 1]} />
         <meshStandardMaterial
