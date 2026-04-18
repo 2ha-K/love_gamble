@@ -1,0 +1,22 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#050101"/>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="600" cy="310" r="210" fill="#140705" stroke="#D8A34B" stroke-width="10"/>
+  <circle cx="600" cy="310" r="170" stroke="#7E1F19" stroke-width="6"/>
+  <path d="M600 426C561 378 482 337 482 260C482 218 513 188 555 188C581 188 594 201 600 218C606 201 619 188 645 188C687 188 718 218 718 260C718 337 639 378 600 426Z" fill="#C83A2B"/>
+  <path d="M300 328C433 218 767 218 900 328" stroke="#F4D27E" stroke-width="14" stroke-linecap="round"/>
+  <path d="M244 428C407 532 793 532 956 428" stroke="#8D211B" stroke-width="12" stroke-linecap="round"/>
+  <path d="M600 128V156" stroke="#F4D27E" stroke-width="12" stroke-linecap="round"/>
+  <path d="M600 464V530" stroke="#F4D27E" stroke-width="12" stroke-linecap="round"/>
+  <path d="M382 310H448" stroke="#F4D27E" stroke-width="12" stroke-linecap="round"/>
+  <path d="M752 310H818" stroke="#F4D27E" stroke-width="12" stroke-linecap="round"/>
+  <text x="600" y="72" text-anchor="middle" fill="#E5B95D" font-size="26" letter-spacing="12" font-family="Times New Roman, serif">LOVE FATE RITUAL</text>
+  <text x="600" y="590" text-anchor="middle" fill="#FFF0CF" font-size="58" font-weight="700" font-family="Times New Roman, serif">水獺命籤</text>
+  <defs>
+    <radialGradient id="bg" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(600 315) rotate(90) scale(390 650)">
+      <stop stop-color="#4D1C10"/>
+      <stop offset="0.52" stop-color="#140503"/>
+      <stop offset="1" stop-color="#050101"/>
+    </radialGradient>
+  </defs>
+</svg>
