@@ -1,0 +1,217 @@
+.app-shell {
+  position: relative;
+  height: 100svh;
+  min-height: 100svh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(161, 86, 31, 0.24), transparent 34%),
+    radial-gradient(circle at 18% 20%, rgba(181, 61, 34, 0.12), transparent 28%),
+    radial-gradient(circle at 80% 12%, rgba(218, 169, 88, 0.1), transparent 26%),
+    #020101;
+  color: #f7ead0;
+}
+
+.ritual-canvas {
+  position: absolute !important;
+  inset: 0;
+  width: 100%;
+  height: 100svh !important;
+  cursor: grab;
+}
+
+.ritual-canvas:active {
+  cursor: grabbing;
+}
+
+.ritual-canvas > div,
+.ritual-canvas canvas {
+  width: 100vw !important;
+  height: 100svh !important;
+}
+
+.grain {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  opacity: 0.16;
+  mix-blend-mode: screen;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 46px 46px;
+}
+
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 46%, transparent 0, rgba(0, 0, 0, 0.48) 76%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.5));
+}
+
+.ritual-chrome {
+  pointer-events: none;
+  position: relative;
+  z-index: 3;
+  display: flex;
+  min-height: 100svh;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+.brand-mark,
+.mode-hint {
+  width: fit-content;
+  border: 1px solid rgba(226, 185, 103, 0.18);
+  background: rgba(14, 8, 5, 0.46);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 244, 214, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  color: rgba(249, 224, 177, 0.86);
+  font-family: "Times New Roman", "Noto Serif TC", serif;
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.card-title {
+  align-self: flex-start;
+  max-width: min(470px, calc(100vw - 52px));
+  margin-bottom: 22px;
+}
+
+.card-title span {
+  display: block;
+  margin-bottom: 10px;
+  color: rgba(217, 174, 93, 0.74);
+  font-size: 13px;
+  letter-spacing: 0.32em;
+}
+
+.card-title h1 {
+  margin: 0;
+  color: #fff0ce;
+  font-family: "Times New Roman", "Noto Serif TC", serif;
+  font-size: clamp(42px, 8vw, 92px);
+  font-weight: 700;
+  line-height: 0.92;
+  text-shadow: 0 0 36px rgba(217, 157, 67, 0.18);
+}
+
+.mode-hint {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  align-self: center;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  color: rgba(255, 239, 204, 0.9);
+  font-size: 14px;
+}
+
+.mode-hint strong {
+  min-width: 42px;
+  color: #f3c56e;
+  font-variant-numeric: tabular-nums;
+}
+
+.reset-button {
+  pointer-events: auto;
+  position: fixed;
+  z-index: 5;
+  right: 28px;
+  top: 50%;
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border: 1px solid rgba(255, 219, 148, 0.3);
+  border-radius: 999px;
+  color: #ffe3a2;
+  background:
+    radial-gradient(circle at 32% 24%, rgba(255, 244, 198, 0.28), transparent 35%),
+    linear-gradient(145deg, rgba(89, 49, 18, 0.9), rgba(24, 11, 5, 0.92));
+  box-shadow:
+    0 18px 46px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -10px 18px rgba(0, 0, 0, 0.22);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.reset-button:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.reset-button:focus-visible {
+  outline: 2px solid #f5c971;
+  outline-offset: 4px;
+}
+
+.loading-overlay div {
+  display: grid;
+  gap: 8px;
+  min-width: 150px;
+  padding: 18px 20px;
+  border: 1px solid rgba(226, 185, 103, 0.2);
+  color: #f8dfad;
+  background: rgba(9, 5, 3, 0.72);
+  text-align: center;
+  backdrop-filter: blur(14px);
+}
+
+.loading-overlay span {
+  font-size: 12px;
+  letter-spacing: 0.28em;
+}
+
+.loading-overlay strong {
+  font-size: 18px;
+}
+
+@media (max-width: 760px) {
+  .ritual-chrome {
+    padding: 18px;
+  }
+
+  .brand-mark {
+    max-width: calc(100vw - 36px);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+  }
+
+  .card-title {
+    margin-bottom: 84px;
+  }
+
+  .card-title h1 {
+    font-size: clamp(38px, 14vw, 66px);
+  }
+
+  .mode-hint {
+    max-width: calc(100vw - 36px);
+    justify-content: center;
+    font-size: 12px;
+  }
+
+  .reset-button {
+    right: 16px;
+    top: auto;
+    bottom: 92px;
+    width: 52px;
+    height: 52px;
+    transform: none;
+  }
+}
