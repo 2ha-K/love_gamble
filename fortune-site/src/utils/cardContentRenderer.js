@@ -38,6 +38,13 @@ function drawFallbackSeal(ctx, width, height, tone = "#7b1f19") {
   ctx.restore();
 }
 
+function drawImageContain(ctx, image, x, y, boxWidth, boxHeight) {
+  const ratio = Math.min(boxWidth / image.naturalWidth, boxHeight / image.naturalHeight);
+  const drawWidth = image.naturalWidth * ratio;
+  const drawHeight = image.naturalHeight * ratio;
+  ctx.drawImage(image, x + (boxWidth - drawWidth) / 2, y + (boxHeight - drawHeight) / 2, drawWidth, drawHeight);
+}
+
 export function drawCardContent(ctx, card, options = {}) {
   const width = ctx.canvas.width;
   const height = ctx.canvas.height;
@@ -78,26 +85,29 @@ export function drawCardContent(ctx, card, options = {}) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.font = "700 32px serif";
-  ctx.fillText(content.eyebrow || "Oracle", width / 2, height * 0.19);
+  ctx.fillText(content.eyebrow || "Oracle", width / 2, height * 0.16);
 
-  if ((content.type === "image" || content.type === "mixed") && image) {
-    const imageSize = content.type === "mixed" ? width * 0.36 : width * 0.5;
-    const imageY = content.type === "mixed" ? height * 0.29 : height * 0.33;
+  const hasImageSlot = Boolean(content.src) || content.type === "image" || content.type === "mixed";
+  const hasText = Boolean(content.text) && content.type !== "image";
+  const imageSize = hasText ? width * 0.28 : width * 0.5;
+  const imageY = hasText ? height * 0.34 : height * 0.34;
+
+  if (hasImageSlot && image) {
     ctx.save();
     ctx.beginPath();
     ctx.roundRect(width / 2 - imageSize / 2, imageY - imageSize / 2, imageSize, imageSize, 22);
     ctx.clip();
-    ctx.drawImage(image, width / 2 - imageSize / 2, imageY - imageSize / 2, imageSize, imageSize);
+    drawImageContain(ctx, image, width / 2 - imageSize / 2, imageY - imageSize / 2, imageSize, imageSize);
     ctx.restore();
-  } else if (content.type === "image" || content.type === "mixed") {
-    drawFallbackSeal(ctx, width, height, content.type === "mixed" ? "#8d2218" : "#422316");
+  } else if (hasImageSlot) {
+    drawFallbackSeal(ctx, width, height, hasText ? "#8d2218" : "#422316");
   }
 
-  if (content.type === "text" || content.type === "mixed") {
+  if (hasText) {
     ctx.fillStyle = "#29130d";
-    ctx.font = `700 ${content.type === "mixed" ? 43 : 54}px "Times New Roman", serif`;
-    const startY = content.type === "mixed" ? height * 0.55 : height * 0.42;
-    drawWrappedText(ctx, content.text, width / 2, startY, width * 0.66, content.type === "mixed" ? 58 : 72);
+    ctx.font = `700 ${hasImageSlot ? 39 : 54}px "Times New Roman", serif`;
+    const startY = hasImageSlot ? height * 0.54 : height * 0.42;
+    drawWrappedText(ctx, content.text, width / 2, startY, width * 0.66, hasImageSlot ? 52 : 72);
   }
 
   ctx.fillStyle = `rgba(56, 25, 13, ${0.72 + boost * 0.2})`;
@@ -137,4 +147,3 @@ export function createContentCanvas(card, onUpdate) {
 
   return { canvas, redraw };
 }
-

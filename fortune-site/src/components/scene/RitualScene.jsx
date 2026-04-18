@@ -22,6 +22,10 @@ export function RitualScene({
     const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     return mobile ? [1, 1.5] : [1, 2];
   }, []);
+  const isMobile = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(max-width: 760px), (pointer: coarse)").matches;
+  }, []);
   const showTube =
     state === APP_STATES.IDLE ||
     state === APP_STATES.DRAWING ||
@@ -59,6 +63,7 @@ export function RitualScene({
             key={`${activeCard.id}-${resetKey}`}
             card={activeCard}
             state={state}
+            compact={isMobile}
             onDrawComplete={onDrawComplete}
             onScratchMode={onScratchMode}
             onScratchEnd={onScratchEnd}

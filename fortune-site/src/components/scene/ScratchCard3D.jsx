@@ -104,6 +104,7 @@ function fadeMaterial(material, opacity) {
 export function ScratchCard3D({
   card,
   state,
+  compact = false,
   onDrawComplete,
   onScratchMode,
   onScratchEnd,
@@ -121,6 +122,9 @@ export function ScratchCard3D({
   const drawCompleteRef = useRef(false);
   const disintegrateStartRef = useRef(null);
   const tilt = useCardTilt();
+  const cardScale = compact ? 0.72 : 1;
+  const cardY = compact ? -0.1 : 0.02;
+  const cardZ = compact ? 1.3 : 1.38;
   const { textures, bursts, scratchAt, endStroke } = useScratchCard(card, {
     onProgress: onScratchProgress,
     onScratchActivity,
@@ -146,7 +150,7 @@ export function ScratchCard3D({
       const path = stagedDrawPath(t);
       groupRef.current.position.set(...path.position);
       groupRef.current.rotation.set(...path.rotation);
-      groupRef.current.scale.setScalar(path.scale);
+      groupRef.current.scale.setScalar(path.scale * cardScale);
 
       if (coatingRef.current) {
         coatingRef.current.material.emissiveIntensity = 0.08 + path.glow * 0.28;
@@ -163,8 +167,8 @@ export function ScratchCard3D({
     }
 
     const rotation = tilt.step(delta, holdingTiltRef.current ? 72 : 48, 12);
-    groupRef.current.position.set(0, 0.02 + Math.sin(elapsed * 0.75) * 0.025, 1.38);
-    groupRef.current.scale.setScalar(1);
+    groupRef.current.position.set(0, cardY + Math.sin(elapsed * 0.75) * 0.025, cardZ);
+    groupRef.current.scale.setScalar(cardScale);
     groupRef.current.rotation.x = rotation.x;
     groupRef.current.rotation.y = rotation.y;
     groupRef.current.rotation.z = Math.sin(elapsed * 0.4) * 0.01;
@@ -173,7 +177,7 @@ export function ScratchCard3D({
     }
 
     if (state === APP_STATES.SCRATCH_MODE) {
-      groupRef.current.position.z = 1.48;
+      groupRef.current.position.z = compact ? 1.4 : 1.48;
       if (coatingRef.current) {
         coatingRef.current.material.emissiveIntensity = 0.18 + Math.sin(elapsed * 4) * 0.06;
       }
@@ -183,13 +187,13 @@ export function ScratchCard3D({
       if (disintegrateStartRef.current === null) disintegrateStartRef.current = elapsed;
       const p = Math.min(1, (elapsed - disintegrateStartRef.current) / 1.8);
       const path = stagedResetPath(p);
-      groupRef.current.position.set(...path.position);
+      groupRef.current.position.set(path.position[0], path.position[1] + (compact ? -0.12 : 0), path.position[2]);
       groupRef.current.rotation.set(
         rotation.x + path.rotation[0],
         rotation.y + path.rotation[1],
         path.rotation[2],
       );
-      groupRef.current.scale.setScalar(path.scale);
+      groupRef.current.scale.setScalar(path.scale * cardScale);
       groupRef.current.traverse((object) => {
         if (object.material) {
           fadeMaterial(object.material, path.opacity);

@@ -14,6 +14,8 @@ export default function App() {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [scratchPercent, setScratchPercent] = useState(0);
   const [resetKey, setResetKey] = useState(0);
+  const [hasStartedScratch, setHasStartedScratch] = useState(false);
+  const lastDrawIndexRef = useRef(-1);
   const resetTimerRef = useRef(null);
   const audio = useRitualAudio();
 
@@ -22,11 +24,29 @@ export default function App() {
     return scratchCards[activeIndex % scratchCards.length];
   }, [activeIndex]);
 
+  const displayCard =
+    !hasStartedScratch &&
+    (state === APP_STATES.DRAWING ||
+      state === APP_STATES.REVEALED ||
+      state === APP_STATES.DISINTEGRATING)
+      ? activeCard
+      : null;
+  const showTitle = state === APP_STATES.IDLE || Boolean(displayCard);
+
   const startDraw = useCallback(() => {
     if (state !== APP_STATES.IDLE) return;
     audio.draw();
     setScratchPercent(0);
-    setActiveIndex((index) => (index + 1) % scratchCards.length);
+    setHasStartedScratch(false);
+    setActiveIndex(() => {
+      if (scratchCards.length <= 1) return 0;
+      let nextIndex = Math.floor(Math.random() * scratchCards.length);
+      while (nextIndex === lastDrawIndexRef.current) {
+        nextIndex = Math.floor(Math.random() * scratchCards.length);
+      }
+      lastDrawIndexRef.current = nextIndex;
+      return nextIndex;
+    });
     setState(APP_STATES.DRAWING);
   }, [audio, state]);
 
@@ -38,6 +58,7 @@ export default function App() {
     setState((current) => {
       if (current !== APP_STATES.REVEALED) return current;
       audio.scratchReady();
+      setHasStartedScratch(true);
       return APP_STATES.SCRATCH_MODE;
     });
   }, [audio]);
@@ -51,15 +72,24 @@ export default function App() {
   }, []);
 
   const reset = useCallback(() => {
-    if (state === APP_STATES.IDLE || state === APP_STATES.RESETTING || state === APP_STATES.DISINTEGRATING) return;
+    if (
+      state === APP_STATES.IDLE ||
+      state === APP_STATES.RESETTING ||
+      state === APP_STATES.DISINTEGRATING
+    ) {
+      return;
+    }
+
     audio.ash();
     setState(APP_STATES.DISINTEGRATING);
     window.clearTimeout(resetTimerRef.current);
     resetTimerRef.current = window.setTimeout(() => {
+      setActiveIndex(-1);
       setState(APP_STATES.RESETTING);
       window.setTimeout(() => {
         setResetKey((key) => key + 1);
         setScratchPercent(0);
+        setHasStartedScratch(false);
         setState(APP_STATES.IDLE);
       }, 460);
     }, 2550);
@@ -82,7 +112,7 @@ export default function App() {
         audio={audio}
       />
 
-      <section className="ritual-chrome" aria-label="抽籤與刮刮樂狀態">
+      <section className="ritual-chrome" aria-label="抽籤與刮刮樂儀式">
         <Motion.div
           className="brand-mark"
           initial={{ opacity: 0, y: -10 }}
@@ -94,17 +124,19 @@ export default function App() {
         </Motion.div>
 
         <AnimatePresence mode="wait">
-          <Motion.div
-            key={activeCard?.id || "idle"}
-            className="card-title"
-            initial={{ opacity: 0, y: 10, filter: "blur(8px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -8, filter: "blur(8px)" }}
-            transition={{ duration: 0.45 }}
-          >
-            <span>{activeCard ? activeCard.subtitle : "全黑空間中的一只籤筒"}</span>
-            <h1>{activeCard ? activeCard.title : "玄夜抽籤"}</h1>
-          </Motion.div>
+          {showTitle && (
+            <Motion.div
+              key={displayCard?.id || "idle"}
+              className="card-title"
+              initial={{ opacity: 0, y: 10, filter: "blur(8px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -8, filter: "blur(8px)" }}
+              transition={{ duration: 0.45 }}
+            >
+              <span>{displayCard ? displayCard.subtitle : "水獺命籤"}</span>
+              <h1>{displayCard ? displayCard.title : "玄夜抽籤"}</h1>
+            </Motion.div>
+          )}
         </AnimatePresence>
 
         <ModeHint state={state} percent={scratchPercent} />
